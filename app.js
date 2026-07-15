@@ -321,7 +321,10 @@ function initAuthListeners() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { nombre } },
+      options: {
+        data: { nombre },
+        emailRedirectTo: 'https://ramk07-2007.github.io/RUBM/'
+      },
     });
 
     setAuthLoading(dom.registerBtn, false);
@@ -348,7 +351,7 @@ function initAuthListeners() {
     setAuthLoading(dom.resetBtn, true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.href.split('#')[0],
+      redirectTo: 'https://ramk07-2007.github.io/RUBM/',
     });
 
     setAuthLoading(dom.resetBtn, false);

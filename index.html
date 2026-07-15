@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RUBM — Sistema empresarial de gestión de cajitas y reportes por IMEI. Multiusuario, en tiempo real.">
+  <meta name="theme-color" content="#c62828">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RUBM">
+
+  <!-- SEO -->
+  <title>RUBM — RamK's Ultra Box Management</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./img/favicon.png">
+  <link rel="apple-touch-icon" href="./img/favicon.png">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     SECCIÓN: FONDO ANIMADO
+     ═══════════════════════════════════════════════════ -->
+<div class="gradient-bg">
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <filter id="goo">
+        <!-- Blur ligeramente reducido para multiplicar el rendimiento x3 -->
+        <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
+        <feBlend in="SourceGraphic" in2="goo" />
+      </filter>
+    </defs>
+  </svg>
+  <div class="gradients-container">
+    <div class="g1"></div>
+    <div class="g2"></div>
+    <div class="g3"></div>
+    <div class="g4"></div>
+    <div class="g5"></div>
+    <div class="interactive"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SECCIÓN: AUTENTICACIÓN
+     Visible cuando el usuario no tiene sesión activa.
+     ═══════════════════════════════════════════════════ -->
+<section id="sectionAuth" class="auth-section" aria-label="Autenticación" style="display:none;">
+  <div class="auth-container">
+
+    <!-- Logo -->
+    <div class="auth-logo" aria-hidden="true">
+      <img src="./img/Box.png" alt="RUBM Logo" class="auth-logo__img auth-logo__img--large">
+    </div>
+
+    <!-- ── Vista: Login ── -->
+    <div id="authLoginView" class="auth-card" role="main" aria-label="Iniciar sesión">
+      <h1 class="auth-card__title">Iniciar sesión</h1>
+      <p class="auth-card__subtitle">Accedé a tu cuenta empresarial</p>
+
+      <div class="form-group">
+        <label class="form-label" for="loginEmail">Email</label>
+        <input type="email"    id="loginEmail"    class="form-input"
+               placeholder="tu@empresa.com" autocomplete="email" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" class="form-input"
+               placeholder="Tu contraseña" autocomplete="current-password" required>
+      </div>
+
+      <div id="loginError" class="auth-error" role="alert" style="display:none;"></div>
+
+      <button type="button" id="loginBtn" class="btn btn--primary btn--full">
+        Iniciar sesión
+      </button>
+
+      <div class="auth-links">
+        <button type="button" id="goToReset"     class="auth-link">¿Olvidaste tu contraseña?</button>
+        <button type="button" id="goToRegister"  class="auth-link">¿No tenés cuenta? <strong>Registrate</strong></button>
+      </div>
+    </div>
+
+    <!-- ── Vista: Registro ── -->
+    <div id="authRegisterView" class="auth-card" role="main" aria-label="Crear cuenta" style="display:none;">
+      <h1 class="auth-card__title">Crear cuenta</h1>
+      <p class="auth-card__subtitle">Completá tus datos para registrarte</p>
+
+      <div class="form-group">
+        <label class="form-label" for="registerNombre">Nombre completo</label>
+        <input type="text"     id="registerNombre"      class="form-input"
+               placeholder="Juan Pérez" autocomplete="name" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="registerEmail">Email</label>
+        <input type="email"    id="registerEmail"       class="form-input"
+               placeholder="tu@empresa.com" autocomplete="email" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="registerPassword">Contraseña</label>
+        <input type="password" id="registerPassword"    class="form-input"
+               placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número" autocomplete="new-password" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="registerPasswordConf">Confirmar contraseña</label>
+        <input type="password" id="registerPasswordConf" class="form-input"
+               placeholder="Repetí tu contraseña" autocomplete="new-password" required>
+      </div>
+
+      <div id="registerError" class="auth-error" role="alert" style="display:none;"></div>
+
+      <button type="button" id="registerBtn" class="btn btn--primary btn--full">
+        Crear cuenta
+      </button>
+
+      <div class="auth-links">
+        <button type="button" id="goToLogin" class="auth-link">¿Ya tenés cuenta? <strong>Iniciá sesión</strong></button>
+      </div>
+    </div>
+
+    <!-- ── Vista: Reset Password ── -->
+    <div id="authResetView" class="auth-card" role="main" aria-label="Recuperar contraseña" style="display:none;">
+      <h1 class="auth-card__title">Recuperar contraseña</h1>
+      <p class="auth-card__subtitle">Te enviaremos un link para restablecer tu contraseña</p>
+
+      <div class="form-group">
+        <label class="form-label" for="resetEmail">Email</label>
+        <input type="email" id="resetEmail" class="form-input"
+               placeholder="tu@empresa.com" autocomplete="email" required>
+      </div>
+
+      <div id="resetMsg" class="auth-msg" role="alert"></div>
+
+      <button type="button" id="resetBtn" class="btn btn--primary btn--full">
+        Enviar link de recuperación
+      </button>
+
+      <div class="auth-links">
+        <button type="button" id="goToLoginFromReset" class="auth-link">← Volver al inicio de sesión</button>
+      </div>
+    </div>
+
+  </div><!-- /auth-container -->
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════
+     SECCIÓN: APLICACIÓN PRINCIPAL
+     Visible solo cuando el usuario está autenticado.
+     ═══════════════════════════════════════════════════ -->
+<div id="sectionApp" style="display:none;">
+
+  <!-- HEADER -->
+  <header class="header" role="banner">
+    <div class="header__left">
+      <!-- 3-dots: abrir lista de cajitas -->
+      <button id="openListBtn" type="button" class="icon-btn" aria-label="Ver lista de cajitas" aria-haspopup="dialog">
+        <span class="dots-icon" aria-hidden="true"></span>
+      </button>
+
+      <!-- Logo -->
+      <a href="." class="logo" aria-label="RUBM — inicio" style="margin-left: 24px;">
+        <img src="./img/Box.png" alt="RUBM Logo" class="logo__img" aria-hidden="true" style="height: 36px; width: auto;">
+      </a>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="header__center">
+      <div class="search" role="search" aria-label="Buscar cajita por IMEI">
+        <input type="text" id="searchInput" class="form-input"
+               placeholder="Ingrese código IMEI y presione Buscar (o Enter)"
+               aria-label="Código IMEI a buscar"
+               autocomplete="off"
+               inputmode="numeric">
+        <button type="button" id="searchBtn" class="btn btn--primary"
+                aria-label="Buscar cajita">Buscar</button>
+      </div>
+    </div>
+
+    <div class="header__right">
+      <!-- Botón Theme Toggle -->
+      <button id="themeToggleBtn" type="button" class="icon-btn" aria-label="Cambiar tema (Claro/Oscuro)" style="margin-right: 8px;">
+        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Por defecto: Luna (Modo Oscuro icon) -->
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+      <!-- Estado de conexión en tiempo real -->
+      <span id="connectionStatus" class="connection-status status--connecting" title="Estado de sincronización">◌ Conectando…</span>
+
+      <!-- Botón agregar cajita -->
+      <button id="addBoxBtn" type="button" class="btn btn--accent" aria-label="Agregar nueva cajita">
+        + Agregar cajita
+      </button>
+
+      <!-- Indicador de usuarios activos -->
+      <div class="online-users-wrapper" style="position:relative; margin-right: 12px;">
+        <button id="onlineUsersBtn" type="button" class="btn btn--outline btn--sm" aria-expanded="false" aria-haspopup="listbox">
+          <span class="pulse-dot"></span> <span id="onlineUsersCount">1</span> activos
+        </button>
+        <div id="onlineUsersDropdown" class="online-users-dropdown" hidden>
+          <div class="dropdown-header">Usuarios conectados</div>
+          <div id="onlineUsersList" class="dropdown-list">
+            <!-- Rellenado por JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Menú usuario -->
+      <div class="user-menu" aria-label="Menú de usuario">
+        <button id="openProfileBtn" type="button" class="profile-btn" aria-label="Configurar perfil">
+          <img id="userAvatarDisplay" src="" alt="" class="avatar-sm" style="display:none;" aria-hidden="true">
+          <span id="userNombreDisplay" class="user-nombre" aria-live="polite"></span>
+        </button>
+        <button id="logoutBtn" type="button" class="btn btn--outline btn--sm" aria-label="Cerrar sesión">
+          Salir
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Spinner de carga -->
+  <div id="loadingSpinner" class="loading-spinner" role="status" aria-label="Cargando…" style="display:none;">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="box-container">
+    <main class="main" id="mainContent" role="main">
+
+      <!-- Estado vacío -->
+      <div id="emptyNotice" class="notice" role="status" aria-live="polite">
+        <span class="notice__icon" aria-hidden="true">📦</span>
+        <p class="notice__text">
+          Ingrese un código IMEI en el buscador o seleccione una cajita desde los tres puntos para continuar.
+        </p>
+      </div>
+
+      <!-- Sección de reportes -->
+      <section id="reportsSection" class="reports-section" hidden aria-label="Reportes de la cajita seleccionada">
+        <div class="reports-top">
+          <div id="selectedImeiTitle" class="imei-title" style="display:none;" aria-live="polite"></div>
+          <button id="addReportBtn" type="button" class="btn btn--outline" style="display:none;"
+                  aria-label="Agregar nuevo reporte">
+            + Agregar reporte
+          </button>
+        </div>
+
+        <div id="reportsList" class="reports-list" role="list" aria-label="Lista de reportes"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ═══ MODALES ═══ -->
+
+  <!-- Modal: Nueva cajita -->
+  <div id="modalAddBox" class="modal-overlay" role="dialog" aria-modal="true"
+       aria-labelledby="modalAddBoxTitle" aria-hidden="true" style="display:none;">
+    <div class="modal">
+      <h2 id="modalAddBoxTitle" class="modal__title">Nueva cajita</h2>
+      <div class="modal__body">
+        <div class="form-group">
+          <label class="form-label" for="newImeiInput">Código IMEI</label>
+          <input type="text" id="newImeiInput" class="form-input"
+                 placeholder="Ej: 861445039523118" autocomplete="off" inputmode="numeric" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newModemInput">Modem</label>
+          <input type="text" id="newModemInput" class="form-input" placeholder="Ej: 4G, 2G, etc.">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newSimInput">Número de SIM</label>
+          <input type="text" id="newSimInput" class="form-input" placeholder="Ej: 8954343..." inputmode="numeric">
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" id="cancelAddImei"  class="btn">Cancelar</button>
+        <button type="button" id="confirmAddImei" class="btn btn--primary">Crear cajita</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Lista de cajitas -->
+  <div id="modalListBoxes" class="modal-overlay" role="dialog" aria-modal="true"
+       aria-labelledby="modalListBoxesTitle" aria-hidden="true" style="display:none;">
+    <div class="modal modal--wide">
+      <h2 id="modalListBoxesTitle" class="modal__title">Lista de cajitas</h2>
+      <div id="boxListContainer" class="box-list modal__body" role="list" aria-label="Cajitas disponibles"></div>
+      <div class="modal__footer">
+        <button type="button" id="closeListBtn" class="btn">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Resultados de búsqueda -->
+  <div id="modalSearchResults" class="modal-overlay" role="dialog" aria-modal="true"
+       aria-labelledby="modalSearchResultsTitle" aria-hidden="true" style="display:none;">
+    <div class="modal modal--wide">
+      <h2 id="modalSearchResultsTitle" class="modal__title">Resultados de búsqueda</h2>
+      <div id="searchResultsContainer" class="box-list modal__body" role="list" aria-label="Resultados de búsqueda"></div>
+      <div class="modal__footer">
+        <button type="button" id="closeSearchResults" class="btn">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar cambio con cambios sin guardar -->
+  <div id="modalConfirmLeave" class="modal-overlay modal-overlay--confirm" role="dialog" aria-modal="true"
+       aria-labelledby="modalConfirmLeaveTitle" aria-hidden="true" style="display:none;">
+    <div class="modal modal--confirm">
+      <h2 id="modalConfirmLeaveTitle" class="modal__title">¿Descartar cambios?</h2>
+      <p class="modal-text">Tenés cambios sin guardar en el reporte actual. Si continuás, se perderán.</p>
+      <div class="modal__footer">
+        <button type="button" id="cancelLeave"  class="btn">Volver</button>
+        <button type="button" id="confirmLeave" class="btn btn--danger">Descartar y continuar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar eliminar reporte -->
+  <div id="modalConfirmDelete" class="modal-overlay modal-overlay--confirm" role="dialog" aria-modal="true"
+       aria-labelledby="modalConfirmDeleteTitle" aria-hidden="true" style="display:none;">
+    <div class="modal modal--confirm">
+      <h2 id="modalConfirmDeleteTitle" class="modal__title">Eliminar reporte</h2>
+      <p id="confirmDeleteText" class="modal-text">¿Eliminar este reporte? Esta acción no se puede deshacer.</p>
+      <div class="modal__footer">
+        <button type="button" id="cancelDelete"  class="btn">Cancelar</button>
+        <button type="button" id="confirmDelete" class="btn btn--danger">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar cajita -->
+  <div id="modalEditBox" class="modal-overlay" role="dialog" aria-modal="true"
+       aria-labelledby="modalEditBoxTitle" aria-hidden="true" style="display:none;">
+    <div class="modal">
+      <h2 id="modalEditBoxTitle" class="modal__title">Editar cajita</h2>
+      <div class="modal__body">
+        <div class="form-group">
+          <span class="form-label">IMEI actual</span>
+          <span id="currentImeiText" class="form-current-value"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editImeiInput">Nuevo IMEI</label>
+          <input type="text" id="editImeiInput" class="form-input"
+                 placeholder="Nuevo código IMEI" autocomplete="off" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editModemInput">Modem</label>
+          <input type="text" id="editModemInput" class="form-input" placeholder="Ej: 4G">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editSimInput">Número de SIM</label>
+          <input type="text" id="editSimInput" class="form-input" placeholder="Ej: 8954343..." inputmode="numeric">
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" id="cancelEditBox"  class="btn">Cancelar</button>
+        <button type="button" id="confirmEditBox" class="btn btn--primary">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar eliminar cajita -->
+  <div id="modalConfirmDeleteBox" class="modal-overlay modal-overlay--confirm" role="dialog" aria-modal="true"
+       aria-labelledby="modalConfirmDeleteBoxTitle" aria-hidden="true" style="display:none;">
+    <div class="modal modal--confirm">
+      <h2 id="modalConfirmDeleteBoxTitle" class="modal__title">Eliminar cajita</h2>
+      <p id="confirmDeleteBoxText" class="modal-text">¿Desea eliminar esta cajita y todos sus reportes? Esta acción no se puede deshacer.</p>
+      <div class="modal__footer">
+        <button type="button" id="cancelDeleteBox"  class="btn">Cancelar</button>
+        <button type="button" id="confirmDeleteBox" class="btn btn--danger">Eliminar cajita</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Configuración de Perfil -->
+  <div id="modalProfile" class="modal-overlay" role="dialog" aria-modal="true"
+       aria-labelledby="modalProfileTitle" aria-hidden="true" style="display:none;">
+    <div class="modal modal--profile">
+      <h2 id="modalProfileTitle" class="modal__title">Configuración de Perfil</h2>
+      <div class="modal__body">
+        
+        <div class="form-group">
+          <label class="form-label" for="profileNameInput">Nombre completo</label>
+          <input type="text" id="profileNameInput" class="form-input" placeholder="Tu nombre">
+        </div>
+
+        <div class="form-group avatar-upload-group">
+          <label class="form-label">Foto de perfil</label>
+          <input type="file" id="profileAvatarInput" accept="image/png, image/jpeg, image/webp" style="display:none;">
+          
+          <!-- Cropper Interactivo -->
+          <div class="cropper-container">
+            <canvas id="cropperCanvas" width="200" height="200"></canvas>
+            <div class="cropper-overlay" aria-hidden="true"></div>
+            <div class="cropper-instructions">Arrastra para mover · Scroll para hacer zoom</div>
+          </div>
+          
+          <div class="cropper-controls">
+            <button type="button" id="selectAvatarBtn" class="btn btn--outline btn--sm">Subir nueva foto</button>
+            <input type="range" id="zoomSlider" class="zoom-slider" min="0.1" max="3" step="0.05" value="1" title="Ajustar zoom">
+          </div>
+        </div>
+
+      </div>
+      <div class="modal__footer">
+        <button type="button" id="cancelProfile" class="btn">Cancelar</button>
+        <button type="button" id="saveProfile" class="btn btn--primary">Guardar Perfil</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /sectionApp -->
+
+<!-- Toast container (Global) -->
+<div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+<!-- ── Script de entrada (ES Module) ── -->
+<script type="module" src="./app.js"></script>
+
+</body>
+</html>

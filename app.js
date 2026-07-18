@@ -332,8 +332,8 @@ function initAuthListeners() {
     });
 
     // Supabase devuelve un falso éxito si el correo ya existe para prevenir ataques de enumeración.
-    // Lo detectamos porque el array de identities viene vacío.
-    if (!error && data?.user && (!data.user.identities || data.user.identities.length === 0)) {
+    // Lo detectamos porque el array de identities viene vacío (longitud 0).
+    if (!error && data?.user?.identities?.length === 0) {
       error = { message: "Ya existe un usuario con este correo electrónico." };
     }
 

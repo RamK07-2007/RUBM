@@ -322,29 +322,19 @@ function initAuthListeners() {
 
     setAuthLoading(dom.registerBtn, true);
 
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6bXZuc2dxdGZscGtubnFhZHJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMjE5NDQsImV4cCI6MjA5OTY5Nzk0NH0.2_6ETtertlcOt-OaHpjqKCzUGw1BMh2z6_UA3Bq6390';
-    const response = await fetch("https://bzmvnsgqtflpknnqadrj.supabase.co/auth/v1/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_ANON,
-        "Authorization": `Bearer ${SUPABASE_ANON}`
-      },
-      body: JSON.stringify({
-        email,
-        password,
+    let { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
         data: { nombre },
-        email_redirect_to: "https://ramk07-2007.github.io/RUBM/"
-      })
+        emailRedirectTo: "https://ramk07-2007.github.io/RUBM/"
+      }
     });
 
-    let error = null;
-    let data = null;
-    if (!response.ok) {
-      const resJson = await response.json();
-      error = { message: resJson.msg || resJson.message || "Error desconocido" };
-    } else {
-      data = await response.json();
+    // Supabase devuelve un falso éxito si el correo ya existe para prevenir ataques de enumeración.
+    // Lo detectamos porque el array de identities viene vacío.
+    if (!error && data?.user && (!data.user.identities || data.user.identities.length === 0)) {
+      error = { message: "Ya existe un usuario con este correo electrónico." };
     }
 
     setAuthLoading(dom.registerBtn, false);

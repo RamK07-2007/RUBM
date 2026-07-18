@@ -148,14 +148,18 @@ function cacheDom() {
     onlineUsersList:        qs('#onlineUsersList'),
 
     /* ── Modal: Perfil ── */
-    modalProfile:           qs('#modalProfile'),
-    profileNameInput:       qs('#profileNameInput'),
-    profileAvatarInput:     qs('#profileAvatarInput'),
-    selectAvatarBtn:        qs('#selectAvatarBtn'),
-    cropperCanvas:          qs('#cropperCanvas'),
-    zoomSlider:             qs('#zoomSlider'),
-    cancelProfile:          qs('#cancelProfile'),
-    saveProfile:            qs('#saveProfile'),
+    modalProfile:            qs('#modalProfile'),
+    profileNameInput:        qs('#profileNameInput'),
+    profileAvatarInput:      qs('#profileAvatarInput'),
+    selectAvatarBtn:         qs('#selectAvatarBtn'),
+    cropperCanvas:           qs('#cropperCanvas'),
+    zoomSlider:              qs('#zoomSlider'),
+    cancelProfile:           qs('#cancelProfile'),
+    saveProfile:             qs('#saveProfile'),
+    profileNewPassword:      qs('#profileNewPassword'),
+    profileNewPasswordConf:  qs('#profileNewPasswordConf'),
+    profilePasswordMsg:      qs('#profilePasswordMsg'),
+    changePasswordBtn:       qs('#changePasswordBtn'),
 
     /* ── Contenido principal ── */
     emptyNotice:            qs('#emptyNotice'),
@@ -318,14 +322,30 @@ function initAuthListeners() {
 
     setAuthLoading(dom.registerBtn, true);
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { nombre },
-        emailRedirectTo: 'https://ramk07-2007.github.io/RUBM/'
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6bXZuc2dxdGZscGtubnFhZHJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMjE5NDQsImV4cCI6MjA5OTY5Nzk0NH0.2_6ETtertlcOt-OaHpjqKCzUGw1BMh2z6_UA3Bq6390';
+    const response = await fetch("https://bzmvnsgqtflpknnqadrj.supabase.co/auth/v1/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_ANON,
+        "Authorization": `Bearer ${SUPABASE_ANON}`
       },
+      body: JSON.stringify({
+        email,
+        password,
+        data: { nombre },
+        email_redirect_to: "https://ramk07-2007.github.io/RUBM/"
+      })
     });
+
+    let error = null;
+    let data = null;
+    if (!response.ok) {
+      const resJson = await response.json();
+      error = { message: resJson.msg || resJson.message || "Error desconocido" };
+    } else {
+      data = await response.json();
+    }
 
     setAuthLoading(dom.registerBtn, false);
 
@@ -969,6 +989,55 @@ function initProfileModal() {
   dom.cancelProfile?.addEventListener('click', () => {
     closeModal(dom.modalProfile);
     dom.profileAvatarInput.value = '';
+    // Limpiar campos de contraseña al cerrar
+    if (dom.profileNewPassword)     dom.profileNewPassword.value    = '';
+    if (dom.profileNewPasswordConf) dom.profileNewPasswordConf.value = '';
+    if (dom.profilePasswordMsg) {
+      dom.profilePasswordMsg.textContent = '';
+      dom.profilePasswordMsg.style.display = 'none';
+    }
+  });
+
+  /* CAMBIAR CONTRASEÑA desde el perfil */
+  dom.changePasswordBtn?.addEventListener('click', async () => {
+    const newPw   = dom.profileNewPassword?.value ?? '';
+    const confPw  = dom.profileNewPasswordConf?.value ?? '';
+    const msgEl   = dom.profilePasswordMsg;
+
+    // Limpiar mensaje previo
+    if (msgEl) { msgEl.textContent = ''; msgEl.style.display = 'none'; msgEl.className = 'auth-msg'; }
+
+    if (!newPw || !confPw) {
+      if (msgEl) { msgEl.textContent = 'Completá ambos campos.'; msgEl.className = 'auth-msg auth-msg--error'; msgEl.style.display = ''; }
+      return;
+    }
+
+    const pwError = validatePassword(newPw);
+    if (pwError) {
+      if (msgEl) { msgEl.textContent = pwError; msgEl.className = 'auth-msg auth-msg--error'; msgEl.style.display = ''; }
+      return;
+    }
+
+    if (newPw !== confPw) {
+      if (msgEl) { msgEl.textContent = 'Las contraseñas no coinciden.'; msgEl.className = 'auth-msg auth-msg--error'; msgEl.style.display = ''; }
+      return;
+    }
+
+    setAuthLoading(dom.changePasswordBtn, true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPw });
+      if (error) throw error;
+
+      // Limpiar campos
+      if (dom.profileNewPassword)     dom.profileNewPassword.value    = '';
+      if (dom.profileNewPasswordConf) dom.profileNewPasswordConf.value = '';
+      if (msgEl) { msgEl.textContent = '✓ Contraseña actualizada correctamente.'; msgEl.className = 'auth-msg auth-msg--success'; msgEl.style.display = ''; }
+      showToast('Contraseña actualizada correctamente.', 'success');
+    } catch (err) {
+      if (msgEl) { msgEl.textContent = err.message; msgEl.className = 'auth-msg auth-msg--error'; msgEl.style.display = ''; }
+    } finally {
+      setAuthLoading(dom.changePasswordBtn, false);
+    }
   });
 
   dom.selectAvatarBtn?.addEventListener('click', () => {
@@ -1817,6 +1886,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cacheDom();
 
+  // ── Detectar token_hash en URL (nuevo formato de Supabase para confirmación de email) ──
+  // En versiones modernas, Supabase envía ?token_hash=...&type=signup en vez de hash fragments.
+  // Sin esto, el link de confirmación de registro no crea la sesión automáticamente.
+  (async () => {
+    const params    = new URLSearchParams(window.location.search);
+    const tokenHash = params.get('token_hash');
+    const type      = params.get('type');
+
+    if (tokenHash && type) {
+      // Limpiar la URL para que no quede expuesto el token
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+      if (error) {
+        // Si el token ya expiró o es inválido, mostrar mensaje de error en el login
+        // onAuthStateChange sin sesión mostrará el auth screen, así que no hace falta más
+        console.warn('[Auth] verifyOtp error:', error.message);
+      }
+      // Si fue exitoso, onAuthStateChange se dispara con SIGNED_IN o PASSWORD_RECOVERY
+    }
+  })();
+
   // Inicializar TODA la UI una única vez (listeners, modales, etc.)
   initUI();
   initAuthListeners();
@@ -1870,11 +1961,18 @@ document.addEventListener('DOMContentLoaded', () => {
   supabase.auth.onAuthStateChange(async (event, session) => {
 
     if (event === 'PASSWORD_RECOVERY') {
-      // El usuario llegó desde el link de reset → mostrar form de nueva contraseña
-      // (Implementación avanzada: se puede agregar un modal de cambio de contraseña)
-      showToast('Podés cambiar tu contraseña en la configuración de tu cuenta.', 'info');
-      // Por ahora redirigimos al login
-      showAuth('login');
+      // El usuario llegó desde el link de reset de contraseña.
+      // Supabase ya creó la sesión → inicializar la app y abrir el modal de perfil
+      // para que el usuario establezca su nueva contraseña.
+      await initApp(session.user);
+      // Esperar a que el DOM de la app esté visible antes de abrir el modal
+      requestAnimationFrame(() => {
+        openModal(dom.modalProfile);
+        // Hacer scroll hasta los campos de contraseña y enfocar el primero
+        dom.profileNewPassword?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        dom.profileNewPassword?.focus();
+        showToast('✉ Establecé tu nueva contraseña en el formulario.', 'info');
+      });
       return;
     }
 

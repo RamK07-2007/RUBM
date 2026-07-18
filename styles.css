@@ -1346,6 +1346,38 @@ textarea {
   accent-color: var(--color-primary);
 }
 
+/* Sección de cambio de contraseña — card separado dentro del modal de perfil */
+.password-change-section {
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface-alt);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.password-change-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.password-change-section__header svg {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* Eliminar el gap extra de form-group dentro de la sección */
+.password-change-section .form-group {
+  margin: 0;
+}
 
 /* ==========================================================================
    16. RESPONSIVE — Mobile-first breakpoints
@@ -1599,8 +1631,11 @@ textarea {
 }
 
 .auth-logo__img--large {
-  width: 200px;
-  height: 200px;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
   filter: drop-shadow(0 8px 24px rgba(198, 40, 40, 0.45));
 }
 

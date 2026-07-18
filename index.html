@@ -416,6 +416,38 @@
           </div>
         </div>
 
+        <!-- Sección: Cambiar contraseña -->
+        <div class="password-change-section">
+          <div class="password-change-section__header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span>Cambiar contraseña</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="profileNewPassword">Nueva contraseña</label>
+            <input type="password" id="profileNewPassword" class="form-input"
+                   placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número" autocomplete="new-password">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="profileNewPasswordConf">Confirmar nueva contraseña</label>
+            <input type="password" id="profileNewPasswordConf" class="form-input"
+                   placeholder="Repetí la nueva contraseña" autocomplete="new-password">
+          </div>
+
+          <div id="profilePasswordMsg" class="auth-msg" role="alert" style="display:none;"></div>
+
+          <button type="button" id="changePasswordBtn" class="btn btn--primary btn--full">
+            Cambiar contraseña
+          </button>
+        </div>
+
+
       </div>
       <div class="modal__footer">
         <button type="button" id="cancelProfile" class="btn">Cancelar</button>
